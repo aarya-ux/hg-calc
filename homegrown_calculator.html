@@ -124,7 +124,7 @@
   .bottom-col {
     background: #E2E2E2;
     border-radius: 16px;
-    padding: 20px 20px 0;
+    padding: 20px 20px 20px;
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -139,7 +139,7 @@
   }
 
   .col-val {
-    font-size: 24px;
+    font-size: 20px;
     font-weight: 400;
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.5px;
@@ -161,8 +161,7 @@
   .col-chart {
     height: 120px;
     overflow: hidden;
-    margin-top: auto;
-    margin-bottom: 20px;
+    margin-top: 16px;
   }
 
   /* Mobile styles */
@@ -208,7 +207,7 @@
 
     .col-label { font-size: 11px; margin-bottom: 6px; }
 
-    .col-val { font-size: 15px; }
+    .col-val { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
     .col-sublabel { font-size: 11px; }
 
@@ -295,8 +294,8 @@
     canvas.height = H;
     const ctx = canvas.getContext('2d');
 
-    const BAR_W = wavy ? 8 : 14;
-    const GAP   = wavy ? 4 : 3;
+    const BAR_W = 14;
+    const GAP   = 3;
     const STEP  = BAR_W + GAP;
     const SPEED = wavy ? 40 : 28;
     const TOTAL = Math.ceil(W / STEP) + 4;
@@ -335,12 +334,12 @@
         const idx = firstIdx + i;
 
         if (wavy) {
-          // bars grow from right to left — rightmost (newest) is shortest, leftmost (oldest) tallest
-          // this always looks like a rising chart reading left to right
-          const screenPos = x / W; // 0=left, 1=right
-          const trend = 0.15 + screenPos * 0.85; // left=short, right=tall
-          const noise = 0.04 * Math.sin(idx * 2.3) + 0.02 * Math.sin(idx * 5.1);
-          const ratio = Math.max(0.05, Math.min(1, trend + noise));
+          // gradual upward trend with subtle stagger — no big drop offs
+          const CYCLE = 60;
+          const pos = idx % CYCLE;
+          const trend = 0.32 + (pos / CYCLE) * 0.12; // gradual climb staying around 46%
+          const stagger = 0.04 * Math.sin(idx * 1.4) + 0.02 * Math.sin(idx * 3.1);
+          const ratio = Math.max(0.1, Math.min(0.46, trend + stagger));
           const h = ratio * H;
 
           ctx.fillStyle = color;
