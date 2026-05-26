@@ -124,7 +124,7 @@
   .bottom-col {
     background: #E2E2E2;
     border-radius: 16px;
-    padding: 20px 20px 20px;
+    padding: 20px;
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -156,12 +156,6 @@
     color: #60605F;
     line-height: 1.4;
     margin-bottom: 16px;
-  }
-
-  .col-chart {
-    height: 120px;
-    overflow: hidden;
-    margin-top: 16px;
   }
 
   /* Mobile styles */
@@ -211,11 +205,6 @@
 
     .col-sublabel { font-size: 11px; }
 
-    .col-chart {
-      height: 80px;
-      margin-bottom: 16px;
-    }
-
     input[type="range"]::-webkit-slider-thumb {
       width: 18px; height: 18px;
     }
@@ -244,13 +233,11 @@
     <p class="col-label">Est. Monthly Payment</p>
     <p class="col-val green" id="hgPayment">$9,000 – $11,000</p>
     <p class="col-sublabel">Flexes with your revenue</p>
-    <div class="col-chart"><canvas id="chartGood"></canvas></div>
   </div>
   <div class="bottom-col">
     <p class="col-label">Compared to Other Working Capital Loans</p>
     <p class="col-val red" id="otherPayment">$25,000</p>
     <p class="col-sublabel">Same amount. Every month. No matter what.</p>
-    <div class="col-chart"><canvas id="chartBad"></canvas></div>
   </div>
 </div>
 
@@ -284,84 +271,7 @@
   update();
 </script>
 
-<script>
-  function startChart(canvasId, color, wavy) {
-    const canvas = document.getElementById(canvasId);
-    const parent = canvas.parentElement;
-    const W = parent.offsetWidth;
-    const H = 100;
-    canvas.width = W;
-    canvas.height = H;
-    const ctx = canvas.getContext('2d');
 
-    const BAR_W = 14;
-    const GAP   = 3;
-    const STEP  = BAR_W + GAP;
-    const SPEED = wavy ? 40 : 28;
-    const TOTAL = Math.ceil(W / STEP) + 4;
-
-    // pre-bake bar heights indexed by bar number
-    function barHeight(idx) {
-      if (!wavy) return 0.92;
-      // position within visible window determines trend — use modulo so it loops
-      const pos = ((idx % TOTAL) + TOTAL) % TOTAL;
-      const screenPos = pos / TOTAL;
-      const trend = 0.12 + screenPos * 0.80;
-      const noise = 0.04 * Math.sin(idx * 2.3) + 0.02 * Math.sin(idx * 5.1);
-      return Math.max(0.08, Math.min(1, trend + noise));
-    }
-
-    // Use a continuous float offset — never floor it for bar identity
-    let offset = 0;
-    let lastTs = null;
-
-    function draw(ts) {
-      if (lastTs !== null) {
-        const delta = (ts - lastTs) / 1000;
-        offset += SPEED * delta;
-      }
-      lastTs = ts;
-
-      ctx.clearRect(0, 0, W, H);
-
-      const startX   = -(offset % STEP);
-      const firstIdx = Math.floor(offset / STEP);
-
-      for (let i = 0; i < TOTAL + 1; i++) {
-        const x = startX + i * STEP;
-        if (x > W + STEP) break;
-
-        const idx = firstIdx + i;
-
-        if (wavy) {
-          // gradual upward trend with subtle stagger — no big drop offs
-          const CYCLE = 60;
-          const pos = idx % CYCLE;
-          const trend = 0.32 + (pos / CYCLE) * 0.12; // gradual climb staying around 46%
-          const stagger = 0.04 * Math.sin(idx * 1.4) + 0.02 * Math.sin(idx * 3.1);
-          const ratio = Math.max(0.1, Math.min(0.46, trend + stagger));
-          const h = ratio * H;
-
-          ctx.fillStyle = color;
-          ctx.beginPath();
-          ctx.roundRect(x, H - h, BAR_W, h, [2, 2, 0, 0]);
-          ctx.fill();
-        } else {
-          ctx.fillStyle = color;
-          ctx.fillRect(x, 0, BAR_W, H);
-        }
-      }
-      requestAnimationFrame(draw);
-    }
-
-    requestAnimationFrame(draw);
-  }
-
-  window.addEventListener('load', function() {
-    startChart('chartGood', '#3ddc84', true);
-    startChart('chartBad',  '#f05d5d', false);
-  });
-</script>
 
 </body>
 </html>
